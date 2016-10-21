@@ -2,6 +2,7 @@ package moe.sp.labdemo;
 
 import java.sql.Connection;
 import java.sql.DriverManager;
+import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
@@ -11,7 +12,7 @@ public class SQLExample {
   private static final String DB_DRIVER = "org.h2.Driver";
   private static final String DB_CONNECTION = "jdbc:h2:mem:secure;DB_CLOSE_DELAY=-1";
   private static final String DB_USER = "";
-  private static final String DB_PASSWORD = "";
+  private static final String DB_PASSWORD = "abc";
 
   private static final String TEST_USER = "HelloSecure";
   private static final String TEST_PASS = "1234";
@@ -42,15 +43,18 @@ public class SQLExample {
 
   private boolean isValidUser(String userName, String pass) throws ClassNotFoundException, SQLException {
     Connection conn = getDBConnection();
-    Statement stmt = conn.createStatement();
-    ResultSet rs = stmt
-        .executeQuery("SELECT * FROM USER WHERE userName='" + userName + "' AND password='" + pass + "'");
+    String sql = "SELECT * FROM USER WHERE userName=? AND password=?";
+    PreparedStatement pStatement = conn.prepareStatement(sql);
+    pStatement.setString(1, userName);
+    pStatement.setString(2, pass);
+    
+    ResultSet rs = pStatement.executeQuery();
     boolean valid = false;
     if (rs.next()) {
       valid = true;
     }
     rs.close();
-    stmt.close();
+    pStatement.close();
     conn.commit();
     conn.close();
     return valid;
